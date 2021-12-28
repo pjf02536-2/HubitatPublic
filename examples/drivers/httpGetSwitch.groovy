@@ -5,7 +5,7 @@
  * 
  */
 metadata {
-    definition(name: "Http GET Switch", namespace: "community", author: "Community", importUrl: "https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy") {
+    definition(name: "Http GET Switch", namespace: "community", author: "Community", importUrl: "https://github.com/pjf02536-2/HubitatPublic/edit/master/examples/drivers/httpGetSwitch.groovy") {
         capability "Actuator"
         capability "Switch"
         capability "Sensor"
