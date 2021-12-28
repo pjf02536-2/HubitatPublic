@@ -2,7 +2,8 @@
  * Http GET Switch
  *
  * Calls URIs with HTTP GET for switch on or off
- * 
+ *  also tracks state so if its on off state tracks
+ *   the Toggle will assist in resetting mis tracked device states
  */
 metadata {
     definition(name: "Http GET Toggle Switch", namespace: "community", author: "Community/pjf", importUrl: "https://github.com/pjf02536-2/HubitatPublic/blob/master/examples/drivers/httpGetSwitch.groovy") {
