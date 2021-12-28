@@ -39,12 +39,15 @@ def on() {
     if (logEnable) log.debug "Sending on GET request to [${settings.onURI}]"
 
     try {
-        httpGet(settings.onURI) { resp ->
-            if (resp.success) {
-                sendEvent(name: "switch", value: "on", isStateChange: true)
-            }
-            if (logEnable)
-                if (resp.data) log.debug "${resp.data}"
+        if ( !state,ISOn ) {
+            httpGet(settings.onURI) { resp ->
+                if (resp.success) {
+                    state.IsOn = true
+                    sendEvent(name: "switch", value: "on", isStateChange: true)
+                }
+                if (logEnable)
+                    if (resp.data) log.debug "${resp.data}"
+                }
         }
     } catch (Exception e) {
         log.warn "Call to on failed: ${e.message}"
@@ -55,9 +58,12 @@ def off() {
     if (logEnable) log.debug "Sending off GET request to [${settings.offURI}]"
 
     try {
-        httpGet(settings.offURI) { resp ->
-            if (resp.success) {
-                sendEvent(name: "switch", value: "off", isStateChange: true)
+        if ( state.IsOn ) {
+            httpGet(settings.offURI) { resp ->
+                if (resp.success) {
+                    state.IsOn = false
+                    sendEvent(name: "switch", value: "off", isStateChange: true)
+                }
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
