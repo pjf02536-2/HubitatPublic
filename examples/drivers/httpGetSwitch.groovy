@@ -9,13 +9,14 @@ metadata {
         capability "Actuator"
         capability "Switch"
         capability "Sensor"
+        command "Toggle"
     }
 }
 
 preferences {
     section("URIs") {
-        input "onURI", "text", title: "On URI", required: false
-        input "offURI", "text", title: "Off URI", required: false
+        input "BaseURI", "text", title: "Base URI", required: false
+        input "URIcmd", "text", title: "URI Command", required: false
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 }
@@ -36,35 +37,58 @@ def parse(String description) {
 }
 
 def on() {
-    if (logEnable) log.debug "Sending on GET request to [${settings.onURI}]"
+    FullURI = settings.BaseURI + "/" + settings.URIcmd
+    i (logEnable) log.debug "Sending on GET request to ${FullURI} or [${settings.BaseURI}${settings.URIcmd}]"
 
     try {
-        if ( !state,ISOn ) {
-            httpGet(settings.onURI) { resp ->
+        if ( !state.IsOn ) {
+            httpGet( FullURI ) { resp ->
                 if (resp.success) {
                     state.IsOn = true
                     sendEvent(name: "switch", value: "on", isStateChange: true)
                 }
-                if (logEnable)
-                    if (resp.data) log.debug "${resp.data}"
-                }
-        }
+            }
+            if (logEnable)
+                if (resp.data) log.debug "${resp.data}"
+            }
+        
     } catch (Exception e) {
         log.warn "Call to on failed: ${e.message}"
     }
 }
 
 def off() {
-    if (logEnable) log.debug "Sending off GET request to [${settings.offURI}]"
+    FullURI = settings.BaseURI + "/" + settings.URIcmd
+    if (logEnable) log.debug "Sending off GET request to [${settings.BaseURI}${settings.URIcmd}]"
 
     try {
         if ( state.IsOn ) {
-            httpGet(settings.offURI) { resp ->
+            httpGet(FullURI) { resp ->
                 if (resp.success) {
                     state.IsOn = false
                     sendEvent(name: "switch", value: "off", isStateChange: true)
                 }
             }
+            if (logEnable)
+                if (resp.data) log.debug "${resp.data}"
+        }
+    } catch (Exception e) {
+        log.warn "Call to off failed: ${e.message}"
+    }
+}
+
+
+def Toggle() {
+    FullURI = settings.BaseURI + "/" + settings.URIcmd
+    if (logEnable) log.debug "Sending off GET request to [${FullURI}]"
+
+    try {
+            httpGet(FullURI) { resp ->
+                 if (resp.success) {
+                    state.IsOn = false
+                    sendEvent(name: "switch", value: "off", isStateChange: true)
+            }
+            
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
         }
