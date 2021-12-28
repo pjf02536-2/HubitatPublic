@@ -38,7 +38,7 @@ def parse(String description) {
 
 def on() {
     FullURI = settings.BaseURI + "/" + settings.URIcmd
-    i (logEnable) log.debug "Sending on GET request to ${FullURI} or [${settings.BaseURI}${settings.URIcmd}]"
+    if (logEnable) log.debug "Sending on GET request to ${FullURI} or [${settings.BaseURI}${settings.URIcmd}]"
 
     try {
         if ( !state.IsOn ) {
