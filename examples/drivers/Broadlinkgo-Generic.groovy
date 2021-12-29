@@ -10,7 +10,7 @@ static String version() {
 }
 
 metadata {
-    definition(name: "Http GET Toggle Switch", namespace: "community", author: "Community/pjf", importUrl: "https://github.com/pjf02536-2/HubitatPublic/blob/master/examples/drivers/httpGetSwitch.groovy") {
+    definition(name: "Broadlinkgo Generic Driver", namespace: "community", author: "Community/pjf", importUrl: "https://github.com/pjf02536-2/HubitatPublic/blob/master/examples/drivers/Broadlinkgo-Generic.groovy") {
         capability "Actuator"
         capability "Switch"
         capability "Sensor"
