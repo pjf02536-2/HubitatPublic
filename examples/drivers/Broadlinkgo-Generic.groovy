@@ -4,9 +4,17 @@
  * Calls URIs and appends command for Broadlinkgo servers
  *  All commands are optional
  *
+ * 2021-12-28 - Initial release from modified "http GET switch" 
+ *               https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
+ * 2021-12-30 - fixups and typo corrections
+ * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
+ *
+ *
+ *
  */
+
 static String version() {
-	return "1.0.1"
+	return "1.0.3
 }
 
 metadata {
@@ -44,6 +52,7 @@ preferences {
     section("URIs") {
         input "BaseURI", "text", title: "Base URI", required: false
         input "ONOFFcmd", "text", title: "ON Off URI Command", required: false
+        input "OFFcmd"  , "text", title: "Off URI Command (if not toggle)", required: false
         input "UPcmd", "text", title: "Up Arrow Command", required: false
         input "DNcmd", "text", title: "Down Arrow Command", required: false
         input "RTcmd", "text", title: "Right Arrow Command", required: false
@@ -239,7 +248,8 @@ def Home(){
 
 // ******************************************************************* //
 def on() {
-    if ( state.IsOn == false ) {
+    // on is on reguardless of wether its a toggle or not
+    if ( state.IsOn == false && settings.OFFcmd != null ) {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
         state.IsOn = true
         sendEvent(name: "Power", value: "on", isStateChange: true)
@@ -248,8 +258,13 @@ def on() {
 }
 // ******************************************************************* //
 def off() {
-    if ( state.IsOn == true ) {
-        FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+    // either toggle on off or just off if off command defined
+    if ( state.IsOn == true || settings.OFFcmd != null) {
+        if ( settings.OFFcmd == null){
+            FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+        }else{
+            FullURI = settings.BaseURI + "/" + settings.OFFcmd
+        }
         state.IsOn = false
         sendEvent(name: "Power", value: "off", isStateChange: true)
         DoCommand ( FullURI )
@@ -257,10 +272,13 @@ def off() {
 }
 // ******************************************************************* //
 def PwrToggle() {
-    FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
-    state.IsOn = false
-    sendEvent(name: "Power", value: "off", isStateChange: true)
-    DoCommand ( FullURI )
+    // Only if we dont define the off command
+    if ( settings.OFFcmd != null ) {
+        FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+        state.IsOn = false
+        sendEvent(name: "Power", value: "off", isStateChange: true)
+        DoCommand ( FullURI )
+    }
 }
 
 // ******************************************************************* //
@@ -280,4 +298,3 @@ def DoCommand(FullURI){
     // return
     //return (resp.success )
 }
-
