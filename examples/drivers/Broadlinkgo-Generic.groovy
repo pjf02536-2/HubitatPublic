@@ -8,13 +8,13 @@
  *               https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
  * 2021-12-30 - fixups and typo corrections
  * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
- * 2021-12-31 - Cleaned up on-off(toggle) vs on and off logic
+ *            - more of the same, state set added
  *
  *
  */
 
 static String version() {
-	return "1.0.4"
+	return "1.0.5"
 }
 
 metadata {
@@ -22,6 +22,7 @@ metadata {
         capability "Actuator"
         capability "Switch"
         capability "Sensor"
+        capability "SamsungTV"
         command "PwrToggle"
         command "on"
         command "off"
@@ -259,6 +260,7 @@ def on() {
         DoCommand ( FullURI )
     } 
     if ( settings.OFFcmd != null){
+        state.IsOn = true
         sendEvent(name: "Power", value: "on", isStateChange: true)
         DoCommand ( FullURI )
     }
@@ -274,6 +276,7 @@ def off() {
     }
     if ( settings.OFFcmd != null){
         FullURI = settings.BaseURI + "/" + settings.OFFcmd
+        state.IsOn = false 
         sendEvent(name: "Power", value: "off", isStateChange: true)
         DoCommand ( FullURI )
     }
