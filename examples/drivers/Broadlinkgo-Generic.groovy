@@ -14,7 +14,7 @@
  */
 
 static String version() {
-	return "1.0.5b"
+	return "1.0.5c"
 }
 
 metadata {
@@ -237,14 +237,14 @@ def Eject(){
 // ******************************************************************* //
 def Menu(){
     FullURI = settings.BaseURI + "/" + settings.Menucmd
-    DoCommand ( FullURI )
+    IsSuccess = DoCommand ( FullURI )
     sendEvent(name: "Action", value: "menu", isStateChange: true)
 }
 
 // ******************************************************************* //
 def Home(){
     FullURI = settings.BaseURI + "/" + settings.Homecmd
-    DoCommand ( FullURI )
+    IsSuccess = DoCommand ( FullURI )
     sendEvent(name: "Action", value: "menu", isStateChange: true)
 }
 
@@ -253,15 +253,18 @@ def on() {
     // on is on reguardless of wether its a toggle or not
     FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
 
+    state.cmd = "on"
+
     if ( state.IsOn == false && settings.OFFcmd == null ) {
         state.IsOn = true
         sendEvent(name: "Power", value: "on", isStateChange: true)
-        DoCommand ( FullURI )
+        IsSuccess = DoCommand ( FullURI )
     } 
+
     if ( settings.OFFcmd != null){
         state.IsOn = true
         sendEvent(name: "Power", value: "on", isStateChange: true)
-        DoCommand ( FullURI )
+        IsSuccess = DoCommand ( FullURI )
     }
 }
 // ******************************************************************* //
@@ -269,16 +272,17 @@ def off() {
     // either toggle on off or just off if off command defined
     if ( state.IsOn == true && settings.OFFcmd == null) {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
-        state.IsOn = false 
-        sendEvent(name: "Power", value: "off", isStateChange: true)
-        DoCommand ( FullURI )
+        sendEvent(name: "Power", value: "OFF", isStateChange: true)
+        IsSuccess = Call(DoCommand( FullURI ))
     }
+
     if ( settings.OFFcmd != null){
         FullURI = settings.BaseURI + "/" + settings.OFFcmd
         state.IsOn = false 
-        sendEvent(name: "Power", value: "off", isStateChange: true)
-        DoCommand ( FullURI )
+        sendEvent(name: "Power", value: "OFF", isStateChange: true)
+        IsSuccess = Call(DoCommand( FullURI ))
     }
+
 }
  
 // ******************************************************************* //
@@ -287,11 +291,10 @@ def PwrToggle() {
     if ( settings.OFFcmd != null ) {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
         state.IsOn = false
-        sendEvent(name: "Power", value: "off", isStateChange: true)
-        DoCommand ( FullURI )
+        sendEvent(name: "Power", value: "toggle", isStateChange: true)
+        IsSuccess = DoCommand ( FullURI )
     }
 }
-
 // ******************************************************************* //
 def DoCommand(FullURI){
     if (logEnable) log.debug "Sending off GET request to [${FullURI}]"
@@ -307,5 +310,6 @@ def DoCommand(FullURI){
     
    //state.IsSuccess = resp.success
     // return
-    //return (resp.success )
+    state.IsSuccess = resp.success
+    return state.IsSuccess
 }
