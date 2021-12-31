@@ -14,7 +14,7 @@
  */
 
 static String version() {
-	return "1.0.5"
+	return "1.0.5b"
 }
 
 metadata {
@@ -22,7 +22,6 @@ metadata {
         capability "Actuator"
         capability "Switch"
         capability "Sensor"
-        capability "SamsungTV"
         command "PwrToggle"
         command "on"
         command "off"
