@@ -8,13 +8,13 @@
  *               https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
  * 2021-12-30 - fixups and typo corrections
  * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
- *
+ * 2021-12-31 - Cleaned up on-off(toggle) vs on and off logic
  *
  *
  */
 
 static String version() {
-	return "1.0.3"
+	return "1.0.4"
 }
 
 metadata {
@@ -23,6 +23,8 @@ metadata {
         capability "Switch"
         capability "Sensor"
         command "PwrToggle"
+        command "on"
+        command "off"
         command "OK"
         command "Up"
         command "Down"
@@ -249,9 +251,14 @@ def Home(){
 // ******************************************************************* //
 def on() {
     // on is on reguardless of wether its a toggle or not
-    if ( state.IsOn == false && settings.OFFcmd != null ) {
-        FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+    FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+
+    if ( state.IsOn == false && settings.OFFcmd == null ) {
         state.IsOn = true
+        sendEvent(name: "Power", value: "on", isStateChange: true)
+        DoCommand ( FullURI )
+    } 
+    if ( settings.OFFcmd != null){
         sendEvent(name: "Power", value: "on", isStateChange: true)
         DoCommand ( FullURI )
     }
@@ -259,17 +266,19 @@ def on() {
 // ******************************************************************* //
 def off() {
     // either toggle on off or just off if off command defined
-    if ( state.IsOn == true || settings.OFFcmd != null) {
-        if ( settings.OFFcmd == null){
-            FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
-        }else{
-            FullURI = settings.BaseURI + "/" + settings.OFFcmd
-        }
-        state.IsOn = false
+    if ( state.IsOn == true && settings.OFFcmd == null) {
+        FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
+        state.IsOn = false 
+        sendEvent(name: "Power", value: "off", isStateChange: true)
+        DoCommand ( FullURI )
+    }
+    if ( settings.OFFcmd != null){
+        FullURI = settings.BaseURI + "/" + settings.OFFcmd
         sendEvent(name: "Power", value: "off", isStateChange: true)
         DoCommand ( FullURI )
     }
 }
+ 
 // ******************************************************************* //
 def PwrToggle() {
     // Only if we dont define the off command
