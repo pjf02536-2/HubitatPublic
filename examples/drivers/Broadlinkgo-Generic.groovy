@@ -10,17 +10,18 @@
  * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
  *            - more of the same, state set added
  *
- *
+ * 2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
  */
 
 static String version() {
-	return "1.0.5c"
+	return "1.0.6"
 }
 
 metadata {
     definition(name: "Broadlinkgo Generic Driver", namespace: "community", author: "Community/pjf", importUrl: "https://github.com/pjf02536-2/HubitatPublic/blob/master/examples/drivers/Broadlinkgo-Generic.groovy") {
         capability "Actuator"
         capability "Switch"
+    	capability "Refresh"  
         capability "Sensor"
         command "PwrToggle"
         command "on"
@@ -75,7 +76,7 @@ preferences {
         input "VolUPcmd", "text", title: "Volume up Command", required: false
         input "VolDNcmd", "text", title: "Volume down Command", required: false
         input "Mutecmd", "text", title: "Mute Command", required: false
-        
+
         input "EJcmd", "text", title: "Eject Command", required: false
         input "Playcmd", "text", title: "Play Command", required: false
         input "Stopcmd", "text", title: "Stop Command", required: false
@@ -83,6 +84,7 @@ preferences {
         input "Homecmd", "text", title: "Home Command", required: false
         
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
+        input name: "RepeatCMD", type: "bool", title: "Issue Command Twice", defaltValue: false
     }
 }
 
@@ -253,35 +255,47 @@ def on() {
     // on is on reguardless of wether its a toggle or not
     FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
 
+    log.debug "ON states ${FullURI}"
     state.cmd = "on"
 
     if ( state.IsOn == false && settings.OFFcmd == null ) {
         state.IsOn = true
-        sendEvent(name: "Power", value: "on", isStateChange: true)
         IsSuccess = DoCommand ( FullURI )
+        if (logEnable) log.debug "ON CMD Toggle Complete"
+
     } 
 
     if ( settings.OFFcmd != null){
         state.IsOn = true
-        sendEvent(name: "Power", value: "on", isStateChange: true)
         IsSuccess = DoCommand ( FullURI )
+        if (logEnable) log.debug "ON CMD ON Cpmplete"
     }
+            
+    sendEvent(name: "Power", value: "on", isStateChange: true)
+    sendEvent(name: "success", value: IsSuccess, isStateChange: true)
+//    sendEvent(name: "success", value: " ON: ${IsSuccess}", isStateChange: true)
 }
 // ******************************************************************* //
 def off() {
     // either toggle on off or just off if off command defined
+    // Toggle OFF
+    
     if ( state.IsOn == true && settings.OFFcmd == null) {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
-        sendEvent(name: "Power", value: "OFF", isStateChange: true)
-        IsSuccess = Call(DoCommand( FullURI ))
+        IsSuccess = DoCommand( FullURI )
+        if (logEnable) log.debug "OFF CMD Toggle Completed"
     }
 
+    // SET OFF
     if ( settings.OFFcmd != null){
         FullURI = settings.BaseURI + "/" + settings.OFFcmd
         state.IsOn = false 
-        sendEvent(name: "Power", value: "OFF", isStateChange: true)
-        IsSuccess = Call(DoCommand( FullURI ))
+        IsSuccess = DoCommand( FullURI )
+        if (logEnable) log.debug "OFF CMD OFF Completed"
+        
     }
+    sendEvent(name: "Power", value: "OFF", isStateChange: true)
+    sendEvent(name: "success", value: " off: ${IsSuccess}", isStateChange: true)
 
 }
  
@@ -292,24 +306,36 @@ def PwrToggle() {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
         state.IsOn = false
         sendEvent(name: "Power", value: "toggle", isStateChange: true)
-        IsSuccess = DoCommand ( FullURI )
+        IsSuccess = DoCommand( FullURI )
     }
 }
 // ******************************************************************* //
 def DoCommand(FullURI){
-    if (logEnable) log.debug "Sending off GET request to [${FullURI}]"
+    if (logEnable) log.debug "Sending GET request : [${FullURI}]"
 
     try {
             httpGet(FullURI) { resp ->
-            if (logEnable)
-                if (resp.data) log.debug "${resp.data}"
-            }
-    } catch (Exception e) {
-        log.warn "Call to off failed: ${e.message}"
-    }
-    
-   //state.IsSuccess = resp.success
-    // return
-    state.IsSuccess = resp.success
-    return state.IsSuccess
+                if (resp.success) {
+                    IsSuccess = true
+                } else {
+                    IsSuccess = false
+                }
+                
+                //Repeat if set
+                if ( RepeatCMD == true ){
+                    httpGet(FullURI) { answ ->
+                    if (logEnable) log.debug "DoCommand Sent TWice: Success"
+                    }
+                }
+                
+
+                if (logEnable)
+                    if (resp.data) log.debug "${resp.data}"
+                }
+        } catch (Exception e) {
+            log.warn "Call to off failed: ${e.message}"
+        }
+    if (logEnable) log.debug "DoCommand Sent : Success"
+
+   return 
 }
