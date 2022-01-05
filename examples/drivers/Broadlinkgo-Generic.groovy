@@ -1,16 +1,33 @@
-/*Broadlinkgo Generic integration
+/*
+Broadlinkgo Generic integration
  * based on Hubitat example driver Http GET Switch
  *
+ 2021-2022 Pete Flaherty mraudrey@gmail.com
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
  * Calls URIs and appends command for Broadlinkgo servers
  *  All commands are optional
  *
- * 2021-12-28 - Initial release from modified "http GET switch" 
- *               https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
- * 2021-12-30 - fixups and typo corrections
- * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
- *            - more of the same, state set added
+ * 1.0.0   2021-12-28 - Initial release from modified "http GET switch" 
+ *                      https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
+ * 1.0.3   2021-12-30 - fixups and typo corrections
+ * 1.0.4   2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
+ * 1.0.5x  2021-12-31 - more of the same, state set added (a,b,c versions)
  *
- * 2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
+ * 1.0.6   2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
+ * 1.0.6a             - added GPL Credits and updated release note format
+ *
  */
 
 static String version() {
