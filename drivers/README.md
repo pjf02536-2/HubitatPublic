@@ -6,6 +6,6 @@
 <br>
 <b>httpGetToggleSwitch.groovy</b><br>
 <li>Modified Hubitat example to allow a tracking of a toggled on/off switch</li>
+proof of concept
 
 
-<li></li>
