@@ -1,37 +1,23 @@
-/*
-Broadlinkgo Generic integration
+/*Broadlinkgo Generic integration
  * based on Hubitat example driver Http GET Switch
  *
- 2021-2022 Pete Flaherty mraudrey@gmail.com
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
- 
  * Calls URIs and appends command for Broadlinkgo servers
  *  All commands are optional
  *
- * 1.0.0   2021-12-28 - Initial release from modified "http GET switch" 
- *                      https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
- * 1.0.3   2021-12-30 - fixups and typo corrections
- * 1.0.4   2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
- * 1.0.5x  2021-12-31 - more of the same, state set added (a,b,c versions)
+ * 2021-12-28 - Initial release from modified "http GET switch" 
+ *               https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
+ * 2021-12-30 - fixups and typo corrections
+ * 2021-12-30 - Added off support for devices that dont toggle (only toggles if the OFF command is undefined , otherwise the off is issued )
+ *            - more of the same, state set added
  *
- * 1.0.6   2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
- * 1.0.6a             - added GPL Credits and updated release note format
+ * 2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
  *
+ * 		1.1.0
+ * 2022-01-11 - Updates for Color controls (just setColor for now).  Mapped color hues to colors. Need to add comments for commands to color nx()
  */
 
 static String version() {
-	return "1.0.6"
+	return "1.1.0"
 }
 
 metadata {
@@ -40,6 +26,8 @@ metadata {
         capability "Switch"
     	capability "Refresh"  
         capability "Sensor"
+        capability "Light"
+        capability "ColorControl"
         command "PwrToggle"
         command "on"
         command "off"
@@ -79,13 +67,13 @@ preferences {
         input "LTcmd", "text", title: "Left Arrow Command", required: false
         input "OKcmd", "text", title: "OK Command", required: false
         
-        input "D0cmd", "text", title: "Number 0 Command", required: false
-        input "D1cmd", "text", title: "Number 1 Command", required: false
-        input "D2cmd", "text", title: "Number 2 Command", required: false
-        input "D3cmd", "text", title: "Number 3 Command", required: false
-        input "D4cmd", "text", title: "Number 4 Command", required: false
-        input "D5cmd", "text", title: "Number 5 Command", required: false
-        input "D6cmd", "text", title: "Number 6 Command", required: false
+        input "D0cmd", "text", title: "Number 0 Command (white)", required: false
+        input "D1cmd", "text", title: "Number 1 Command (red)", required: false
+        input "D2cmd", "text", title: "Number 2 Command (green)", required: false
+        input "D3cmd", "text", title: "Number 3 Command (blue)" , required: false
+        input "D4cmd", "text", title: "Number 4 Command (yellow)", required: false
+        input "D5cmd", "text", title: "Number 5 Command (blue-green)", required: false
+        input "D6cmd", "text", title: "Number 6 Command (violet)", required: false
         input "D7cmd", "text", title: "Number 7 Command", required: false
         input "D8cmd", "text", title: "Number 8 Command", required: false
         input "D9cmd", "text", title: "Number 9 Command", required: false
@@ -105,7 +93,74 @@ preferences {
     }
 }
 
+def setColor(colormap) {
+    if (logEnable) log.debug "setColor ()Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+    
+    if (colormap.saturation < 60 && colormap.level > 90 ){
+//    if (colormap.level > 90 ){
+            n0()
+    } else {
+        if (logEnable) log.debug "SWITCH Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
 
+        //google sux and returns Text not integers
+        Hueue = colormap.hue;
+        Hue = Hueue.toInteger()
+        
+        switch ( Hue ) {
+            //orange
+            case 0..10:
+                if (logEnable) log.debug "SWITCH-Case Orange Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n1()
+                break
+            //yellow
+            case 11..19:
+                if (logEnable) log.debug "SWITCH-Case yellow Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n4()
+                break
+            //green
+            case 20..34:
+                if (logEnable) log.debug "SWITCH-Case green Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n2()
+                break
+            //blue-breen
+            case 35..42:
+                if (logEnable) log.debug "SWITCH-Case BReen Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n5()
+                break
+            //Blue
+            case 43..69:
+                if (logEnable) log.debug "SWITCH-Case Map Blue SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n3()
+                break
+            // Voilet
+            case 70..89:
+                if (logEnable) log.debug "SWITCH-Case Voilet Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n6()
+                break
+            //Red
+            case 90..100:
+                if (logEnable) log.debug "SWITCH-Case Rough Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+                n1()
+                break
+        
+        }
+        if (logEnable) log.debug "SWITCH-Out Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
+    }
+}
+def setHue(hue) {
+    if (logEnable) log.debug "Hue is set to ${hue}"
+    setColor([hue: hue]) 
+    if ( hue == 100){
+        //n1()
+    }
+}
+
+def setSaturation(saturation) {
+        if (logEnable) log.debug "Sat is set to ${saturation.hue}"
+        
+}
+
+/* Standard Stuff here */
 def logsOff() {
     log.warn "debug logging disabled..."
     device.updateSetting("logEnable", [value: "false", type: "bool"])
@@ -286,11 +341,13 @@ def on() {
         state.IsOn = true
         IsSuccess = DoCommand ( FullURI )
         if (logEnable) log.debug "ON CMD ON Cpmplete"
+
     }
             
     sendEvent(name: "Power", value: "on", isStateChange: true)
     sendEvent(name: "success", value: IsSuccess, isStateChange: true)
 //    sendEvent(name: "success", value: " ON: ${IsSuccess}", isStateChange: true)
+    
 }
 // ******************************************************************* //
 def off() {
