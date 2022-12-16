@@ -2,6 +2,7 @@
  * based on Hubitat example driver Http GET Switch
  *
  * Calls URIs and appends command for Broadlinkgo servers
+ *  Requires Brioadlinkgo service running and configured locally
  *  All commands are optional
  *
  * 2021-12-28 - Initial release from modified "http GET switch" 
@@ -11,13 +12,12 @@
  *            - more of the same, state set added
  *
  * 2022-01-05 - fixups and some added debugging if on.  Added setting for difficult things to Play command twice (eg cheap LED string controllers )
- *
- * 		1.1.0
  * 2022-01-11 - Updates for Color controls (just setColor for now).  Mapped color hues to colors. Need to add comments for commands to color nx()
+ * 2022-12-16 - Update to Toggle power and Toggle settings in power on off (was not toggling if requested) and on off was iffy
  */
 
 static String version() {
-	return "1.1.0"
+	return "1.2.0"
 }
 
 metadata {
@@ -96,7 +96,7 @@ preferences {
 def setColor(colormap) {
     if (logEnable) log.debug "setColor ()Map SAT:${colormap.saturation} HUE:${colormap.hue} Level: ${colormap.level}"
     
-    if (colormap.saturation < 60 && colormap.level > 90 ){
+    if (colormap.saturation < 60 && colormap.level > 90 && colormap.saturatoin != null){
 //    if (colormap.level > 90 ){
             n0()
     } else {
@@ -156,7 +156,7 @@ def setHue(hue) {
 }
 
 def setSaturation(saturation) {
-        if (logEnable) log.debug "Sat is set to ${saturation.hue}"
+        if (logEnable) log.debug "Sat is set to ${saturation}"
         
 }
 
@@ -331,19 +331,20 @@ def on() {
     state.cmd = "on"
 
     if ( state.IsOn == false && settings.OFFcmd == null ) {
-        state.IsOn = true
+//        state.IsOn = true
         IsSuccess = DoCommand ( FullURI )
         if (logEnable) log.debug "ON CMD Toggle Complete"
 
     } 
 
     if ( settings.OFFcmd != null){
-        state.IsOn = true
+//        state.IsOn = true
         IsSuccess = DoCommand ( FullURI )
         if (logEnable) log.debug "ON CMD ON Cpmplete"
 
     }
-            
+
+    state.IsOn = true
     sendEvent(name: "Power", value: "on", isStateChange: true)
     sendEvent(name: "success", value: IsSuccess, isStateChange: true)
 //    sendEvent(name: "success", value: " ON: ${IsSuccess}", isStateChange: true)
@@ -363,11 +364,12 @@ def off() {
     // SET OFF
     if ( settings.OFFcmd != null){
         FullURI = settings.BaseURI + "/" + settings.OFFcmd
-        state.IsOn = false 
         IsSuccess = DoCommand( FullURI )
         if (logEnable) log.debug "OFF CMD OFF Completed"
         
     }
+
+    state.IsOn = false 
     sendEvent(name: "Power", value: "OFF", isStateChange: true)
     sendEvent(name: "success", value: " off: ${IsSuccess}", isStateChange: true)
 
@@ -376,7 +378,7 @@ def off() {
 // ******************************************************************* //
 def PwrToggle() {
     // Only if we dont define the off command
-    if ( settings.OFFcmd != null ) {
+    if ( settings.OFFcmd == null ) {
         FullURI = settings.BaseURI + "/" + settings.ONOFFcmd
         state.IsOn = false
         sendEvent(name: "Power", value: "toggle", isStateChange: true)
